@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Comida extends Model
 {
-    // Campos que se pueden insertar masivamente
-    protected $fillable = ['nombre', 'peso_total', 'precio_venta'];
+    public $timestamps = false;  // <--- Agregar esto si no querés timestamps
 
-    // Relación con ingredientes (muchos a muchos)
+    protected $fillable = ['nombre', 'precio_venta_kg'];
+
     public function ingredientes()
     {
         return $this->belongsToMany(Ingrediente::class)
-                    ->withPivot('cantidad') // la cantidad usada de ese ingrediente
-                    ->withTimestamps();
+                    ->withPivot('cantidad');
+                    
     }
 }

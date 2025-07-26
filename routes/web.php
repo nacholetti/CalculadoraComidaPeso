@@ -12,3 +12,6 @@ Route::get('/', [GananciaController::class, 'SimuladorGanancias']);
 Route::get('/stock', [GananciaController::class, 'mostrarStock']);
 // web.php
 Route::post('/stock/update', [GananciaController::class, 'actualizarStock']);
+
+Route::get('/comidas/disponibles', [GananciaController::class, 'disponibles']);
+

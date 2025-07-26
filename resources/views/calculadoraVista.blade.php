@@ -40,7 +40,8 @@
         <button type="button" class="btn btn-secondary mb-3" onclick="agregarIngrediente()">+ Agregar ingrediente</button>
         <a href="/ingredientes/create" class="btn btn-info mb-3">Crear nuevo ingrediente</a>
         <a href="/stock" class="btn btn-info mb-3">Ver stock</a>
-        
+        <a href="/comidas/disponibles" class="btn btn-success mb-3">Ver comidas disponibles</a>
+
         <button type="submit" class="btn btn-primary">Guardar comida</button>
     </form>
 </div>
