@@ -32,7 +32,8 @@ class GananciaController
             'costo_unitario' => $request->costo_unitario,
         ]);
 
-        return redirect('/ingredientes/create');
+       return redirect('/')->with('success', 'Ingrediente Creado!');
+
 
     }
 
@@ -61,7 +62,8 @@ class GananciaController
     // Guardar la relación ingredientes con cantidades
     $comida->ingredientes()->sync($ingredientesSync);
 
-    return redirect('/comidas/create')->with('success', 'Comida guardada con ingredientes!');
+    return redirect('/')->with('success', 'Comida guardada con ingredientes!');
+
 }
 
 
@@ -100,8 +102,49 @@ public function disponibles()
     return view('disponibles', compact('comidas'));
 }
 
+public function formularioComidas() {
+    $ingredientes = Ingrediente::all();
+    return view('comidas.create', compact('ingredientes'));
+}
+public function calcularDisponibilidad()
+{
+    $comidas = Comida::with('ingredientes')->get();
 
-/*FALTA BOTON VER COMIDAS DISPONIBLES, INGREDIENTES NECESARIOS PARA CADA PLATO Y CALCULAR PARA CUANTOS PLATOS ALCANZA EL STOCK, SI NO ALCANZA EL STOCK DAR LA POSIBLIDAD DE ACTUALIZAR EL <STOCK class="
+    $resultados = [];
+
+    foreach ($comidas as $comida) {
+        $cantidadesPosibles = [];
+
+        foreach ($comida->ingredientes as $ingrediente) {
+            $stock = $ingrediente->stock ?? 0; // stock disponible
+            $cantidadNecesaria = $ingrediente->pivot->cantidad; // cantidad que usa para 1 plato (kg, unidad, etc)
+
+            if ($cantidadNecesaria > 0) {
+                // Cuántos platos se pueden hacer con ese ingrediente
+                $cantidadesPosibles[] = floor($stock / $cantidadNecesaria);
+            } else {
+                // Si cantidad necesaria 0, lo ignoramos (o asignamos un valor grande)
+                $cantidadesPosibles[] = PHP_INT_MAX;
+            }
+        }
+
+        // La cantidad máxima de platos que se pueden hacer es la mínima de esas cantidades
+        $maxPlatos = !empty($cantidadesPosibles) ? min($cantidadesPosibles) : 0;
+
+        $resultados[] = [
+            'comida' => $comida->nombre,
+            'max_platos' => $maxPlatos,
+        ];
+    }
+
+    return view('disponibles_con_stock', ['comidas' => $comidas, 'disponiblesPorComida' => $resultados]);
+
+
+}
+
+
+
+/* INGREDIENTES NECESARIOS PARA CADA PLATO Y CALCULAR PARA CUANTOS PLATOS ALCANZA EL STOCK, SI NO ALCANZA EL STOCK DAR LA POSIBLIDAD DE ACTUALIZAR EL <STOCK class="
 PASO 2: alertar si alcanza para 4 platos o menos toda la fila en rojo, si hay mas de 15 disponibles en azul, entre 15 y 4 amarillo naranja"></STOCK> */
 
 }

@@ -24,7 +24,9 @@
                 <div class="col">
                     <select name="ingredientes[0][id]" class="form-select">
                         @foreach ($ingredientes as $ingrediente)
-                            <option value="{{ $ingrediente->id }}">{{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})</option>
+                            <option value="{{ $ingrediente->id }}">
+                                {{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -38,44 +40,49 @@
         </div>
 
         <button type="button" class="btn btn-secondary mb-3" onclick="agregarIngrediente()">+ Agregar ingrediente</button>
-        <a href="/ingredientes/create" class="btn btn-info mb-3">Crear nuevo ingrediente</a>
-        <a href="/stock" class="btn btn-info mb-3">Ver stock</a>
-        <a href="/comidas/disponibles" class="btn btn-success mb-3">Ver comidas disponibles</a>
+
+        <div class="mb-3 d-flex gap-2 flex-wrap">
+            <a href="/ingredientes/create" class="btn btn-info">Crear nuevo ingrediente</a>
+            <a href="/stock" class="btn btn-info">Ver stock</a>
+            <a href="/comidas/disponibles" class="btn btn-success">Ver comidas disponibles</a>
+            <a href="/comidas/disponibles_con_stock" class="btn btn-primary">Ver comidas disponibles con stock</a>
+        </div>
 
         <button type="submit" class="btn btn-primary">Guardar comida</button>
     </form>
 </div>
 
 <script>
-let contador = 1;
+    let contador = 1;
 
-function agregarIngrediente() {
-    const container = document.getElementById('ingredientes');
+    function agregarIngrediente() {
+        const container = document.getElementById('ingredientes');
 
-    const nuevaFila = `
-    <div class="row mb-2 ingrediente-row">
-        <div class="col">
-            <select name="ingredientes[${contador}][id]" class="form-select">
-                @foreach ($ingredientes as $ingrediente)
-                    <option value="{{ $ingrediente->id }}">{{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col">
-            <input type="number" step="0.01" name="ingredientes[${contador}][cantidad]" class="form-control" placeholder="Cantidad usada por Kg">
-        </div>
-        <div class="col-1">
-            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarIngrediente(this)">x</button>
-        </div>
-    </div>`;
+        const nuevaFila = `
+        <div class="row mb-2 ingrediente-row">
+            <div class="col">
+                <select name="ingredientes[${contador}][id]" class="form-select">
+                    @foreach ($ingredientes as $ingrediente)
+                        <option value="{{ $ingrediente->id }}">
+                            {{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col">
+                <input type="number" step="0.01" name="ingredientes[${contador}][cantidad]" class="form-control" placeholder="Cantidad usada por Kg">
+            </div>
+            <div class="col-1">
+                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarIngrediente(this)">x</button>
+            </div>
+        </div>`;
 
-    container.insertAdjacentHTML('beforeend', nuevaFila);
-    contador++;
-}
+        container.insertAdjacentHTML('beforeend', nuevaFila);
+        contador++;
+    }
 
-function eliminarIngrediente(btn) {
-    btn.closest('.ingrediente-row').remove();
-}
-
+    function eliminarIngrediente(btn) {
+        btn.closest('.ingrediente-row').remove();
+    }
 </script>
 @endsection

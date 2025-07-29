@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
 
-    <a href="/comidas/create" class="btn btn-secondary mb-3">← Volver a crear plato</a>
+    <a href="/" class="btn btn-secondary mb-3">← Volver a crear plato</a>
 
     <h2>Agregar nuevo ingrediente</h2>
 

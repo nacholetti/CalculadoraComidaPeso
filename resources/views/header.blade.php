@@ -10,7 +10,7 @@
 
     <header class="bg-primary text-white p-3 mb-4">
         <div class="container">
-            <h1>Calculadora de Ganancias - Local de Comida</h1>
+            <h1>Calculadora de Ganancias - Local de comida por peso - Pesonero</h1>
         </div>
     </header>
 
