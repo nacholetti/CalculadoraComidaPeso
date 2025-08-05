@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Bebida;
 
 use Illuminate\Http\Request;
 use App\Models\Ingrediente;
@@ -143,8 +144,38 @@ public function calcularDisponibilidad()
 }
 
 
+// Mostrar formulario para crear bebida
+public function formularioBebida()
+{
+    return view('bebidas'); // Tenés que crear esta vista
+}
 
-/* INGREDIENTES NECESARIOS PARA CADA PLATO Y CALCULAR PARA CUANTOS PLATOS ALCANZA EL STOCK, SI NO ALCANZA EL STOCK DAR LA POSIBLIDAD DE ACTUALIZAR EL <STOCK class="
-PASO 2: alertar si alcanza para 4 platos o menos toda la fila en rojo, si hay mas de 15 disponibles en azul, entre 15 y 4 amarillo naranja"></STOCK> */
+// Guardar bebida en la DB
+public function guardarBebida(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:100',
+        'precio_venta' => 'required|numeric|min:0',
+        'volumen_litros' => 'required|numeric|min:0',
+    ]);
+
+    Bebida::create([
+        'nombre' => $request->nombre,
+        'precio_venta' => $request->precio_venta,
+        'volumen_litros' => $request->volumen_litros,
+    ]);
+
+    return redirect('/bebidas')->with('success', 'Bebida guardada correctamente!');
+}
+
+// Listar bebidas
+public function listarBebidas()
+{
+    $bebidas = Bebida::all();
+    return view('bebidas', compact('bebidas')); // También tenés que crear esta vista
+}
+
+
+
 
 }

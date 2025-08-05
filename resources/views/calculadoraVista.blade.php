@@ -48,6 +48,10 @@
                 <div class="d-flex flex-wrap gap-2 mb-4">
                     <a href="/ingredientes/create" class="btn btn-outline-info">Crear nuevo ingrediente</a>
                     <a href="/stock" class="btn btn-outline-info">Ver stock</a>
+                    <a href="{{ url('/bebidas/create') }}" class="btn btn-outline-info">Agregar Bebida</a>
+                    <a href="{{ url('/bebidas') }}" class="btn btn-outline-info">Ver Stock de Bebidas</a>
+
+
                     <a href="/comidas/disponibles" class="btn btn-outline-success">Ver comidas disponibles</a>
                     <a href="/comidas/disponibles_con_stock" class="btn btn-outline-primary">Comidas con stock</a>
                 </div>

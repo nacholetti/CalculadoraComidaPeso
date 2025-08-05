@@ -19,5 +19,8 @@ Route::get('/comidas/create', [GananciaController::class, 'formularioComidas']);
 Route::post('/comidas/store', [GananciaController::class, 'guardadoAlimentos'])->name('comidas.store');
 Route::get('/comidas/disponibles_con_stock', [GananciaController::class, 'calcularDisponibilidad']);
 
+Route::get('/bebidas/create', [GananciaController::class, 'formularioBebida']);
+Route::post('/bebidas/store', [GananciaController::class, 'guardarBebida']);
+Route::get('/bebidas', [GananciaController::class, 'listarBebidas']);
 
 

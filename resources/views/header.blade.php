@@ -35,6 +35,10 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/comidas/disponibles_con_stock">✅ Con stock</a>
                     </li>
+                    </li>    
+                        <a class="nav-link" href='/bebidas/create'>➕Agregar Bebida</a>
+                        <a class="nav-link" href='/bebidas'>📦Ver Stock de Bebidas</a>
+                    </li> 
                 </ul>
             </div>
         </div>
