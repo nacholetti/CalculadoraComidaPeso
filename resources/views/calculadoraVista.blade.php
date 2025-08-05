@@ -1,55 +1,61 @@
 @extends('header')
 
 @section('content')
-<div class="container">
-    <h2>Cargar nueva comida</h2>
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="mb-4">Cargar nueva comida</h2>
 
-    <form action="/comidas/store" method="POST">
-        @csrf
+            <form action="/comidas/store" method="POST">
+                @csrf
 
-        <div class="mb-3">
-            <label for="nombre" class="form-label">Nombre del plato</label>
-            <input type="text" name="nombre" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="precio_venta_kg" class="form-label">Precio de venta por Kg</label>
-            <input type="number" name="precio_venta_kg" class="form-control" step="0.01" required>
-        </div>
-
-        <h4>Ingredientes</h4>
-
-        <div id="ingredientes">
-            <div class="row mb-2 ingrediente-row">
-                <div class="col">
-                    <select name="ingredientes[0][id]" class="form-select">
-                        @foreach ($ingredientes as $ingrediente)
-                            <option value="{{ $ingrediente->id }}">
-                                {{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre del plato</label>
+                    <input type="text" name="nombre" class="form-control" required>
                 </div>
-                <div class="col">
-                    <input type="number" step="0.01" name="ingredientes[0][cantidad]" class="form-control" placeholder="Cantidad usada por Kg">
+
+                <div class="mb-4">
+                    <label for="precio_venta_kg" class="form-label">Precio de venta por Kg</label>
+                    <input type="number" name="precio_venta_kg" class="form-control" step="0.01" required>
                 </div>
-                <div class="col-1">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarIngrediente(this)">x</button>
+
+                <h4 class="mb-3">Ingredientes</h4>
+
+                <div id="ingredientes">
+                    <div class="row mb-3 ingrediente-row align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label">Ingrediente</label>
+                            <select name="ingredientes[0][id]" class="form-select">
+                                @foreach ($ingredientes as $ingrediente)
+                                    <option value="{{ $ingrediente->id }}">
+                                        {{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cantidad usada por Kg</label>
+                            <input type="number" step="0.01" name="ingredientes[0][cantidad]" class="form-control">
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button type="button" class="btn btn-danger btn-sm mt-4" onclick="eliminarIngrediente(this)">Eliminar</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <button type="button" class="btn btn-secondary mb-4" onclick="agregarIngrediente()">+ Agregar ingrediente</button>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <a href="/ingredientes/create" class="btn btn-outline-info">Crear nuevo ingrediente</a>
+                    <a href="/stock" class="btn btn-outline-info">Ver stock</a>
+                    <a href="/comidas/disponibles" class="btn btn-outline-success">Ver comidas disponibles</a>
+                    <a href="/comidas/disponibles_con_stock" class="btn btn-outline-primary">Comidas con stock</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Guardar comida</button>
+            </form>
         </div>
-
-        <button type="button" class="btn btn-secondary mb-3" onclick="agregarIngrediente()">+ Agregar ingrediente</button>
-
-        <div class="mb-3 d-flex gap-2 flex-wrap">
-            <a href="/ingredientes/create" class="btn btn-info">Crear nuevo ingrediente</a>
-            <a href="/stock" class="btn btn-info">Ver stock</a>
-            <a href="/comidas/disponibles" class="btn btn-success">Ver comidas disponibles</a>
-            <a href="/comidas/disponibles_con_stock" class="btn btn-primary">Ver comidas disponibles con stock</a>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Guardar comida</button>
-    </form>
+    </div>
 </div>
 
 <script>
@@ -59,21 +65,21 @@
         const container = document.getElementById('ingredientes');
 
         const nuevaFila = `
-        <div class="row mb-2 ingrediente-row">
-            <div class="col">
+        <div class="row mb-3 ingrediente-row align-items-end">
+            <div class="col-md-6">
+                <label class="form-label">Ingrediente</label>
                 <select name="ingredientes[${contador}][id]" class="form-select">
                     @foreach ($ingredientes as $ingrediente)
-                        <option value="{{ $ingrediente->id }}">
-                            {{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})
-                        </option>
+                        <option value="{{ $ingrediente->id }}">{{ $ingrediente->nombre }} ({{ $ingrediente->unidad }})</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col">
-                <input type="number" step="0.01" name="ingredientes[${contador}][cantidad]" class="form-control" placeholder="Cantidad usada por Kg">
+            <div class="col-md-4">
+                <label class="form-label">Cantidad usada por Kg</label>
+                <input type="number" step="0.01" name="ingredientes[${contador}][cantidad]" class="form-control">
             </div>
-            <div class="col-1">
-                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarIngrediente(this)">x</button>
+            <div class="col-md-2 text-end">
+                <button type="button" class="btn btn-danger btn-sm mt-4" onclick="eliminarIngrediente(this)">Eliminar</button>
             </div>
         </div>`;
 
