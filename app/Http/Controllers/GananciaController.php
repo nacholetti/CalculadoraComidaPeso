@@ -175,7 +175,10 @@ public function listarBebidas()
     return view('bebidas', compact('bebidas')); // También tenés que crear esta vista
 }
 
-
+public function verStock() {
+    $bebidas = Bebida::all();
+    return view('stock_bebidas', compact('bebidas'));
+}
 
 
 }

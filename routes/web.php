@@ -24,3 +24,4 @@ Route::post('/bebidas/store', [GananciaController::class, 'guardarBebida']);
 Route::get('/bebidas', [GananciaController::class, 'listarBebidas']);
 
 
+Route::get('/bebidas/stock', [GananciaController::class, 'verStock'])->name('bebidas.stock');

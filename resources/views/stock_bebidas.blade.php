@@ -1,27 +1,7 @@
 @extends('header')
 
 @section('content')
-<form method="POST" action="{{ url('/bebidas/store') }}">
-    @csrf
-    <div class="mb-3">
-        <label for="nombre" class="form-label">Nombre</label>
-        <input type="text" name="nombre" class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-        <label for="precio_venta" class="form-label">Precio de Venta</label>
-        <input type="number" step="0.01" name="precio_venta" class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-        <label for="volumen_litros" class="form-label">Volumen (litros)</label>
-        <input type="number" step="0.01" name="volumen_litros" class="form-control" required>
-    </div>
-
-    <button type="submit" class="btn btn-success">Guardar Bebida</button>
-</form>
-
-<div class="container mt-5">
+<div class="container mt-4">
     <h2>Stock de Bebidas</h2>
 
     @if(session('success'))
@@ -52,5 +32,7 @@
     @else
         <p>No hay bebidas registradas.</p>
     @endif
+
+    <a href="{{ url('/bebidas') }}" class="btn btn-primary mt-3">Agregar nueva bebida</a>
 </div>
 @endsection
