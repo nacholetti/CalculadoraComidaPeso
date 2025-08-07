@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Bebida;
+
 
 use Illuminate\Http\Request;
 use App\Models\Ingrediente;
 use App\Models\Comida;
+use App\Models\Bebida;
+use App\Models\Plato;
 class GananciaController
 {
    public function SimuladorGanancias(){
@@ -179,6 +181,53 @@ public function verStock() {
     $bebidas = Bebida::all();
     return view('stock_bebidas', compact('bebidas'));
 }
+// Mostrar la vista con los platos (comidas)
+public function formularioConsumo()
+{
+    $comidas = Comida::all(); // Usás el modelo Comida
+    $bebidas = Bebida::all();
 
+    return view('consumir', compact('comidas','bebidas'));
+}
+
+public function consumirPlato(Request $request)
+{
+    // Validar
+    $request->validate([
+        'plato_id'        => 'nullable|exists:comidas,id',
+        'porciones'       => 'required_with:plato_id|integer|min:1',
+        'bebida_id'       => 'nullable|exists:bebidas,id',
+        'bebida_cantidad' => 'required_with:bebida_id|integer|min:1',
+    ]);
+
+    // Descontar ingredientes del plato
+    if ($request->plato_id) {
+        $plato = Comida::with('ingredientes')->findOrFail($request->plato_id);
+        foreach ($plato->ingredientes as $ing) {
+            $necesario = $ing->pivot->cantidad * $request->porciones;
+            if ($ing->stock < $necesario) {
+                return back()->with('error', "No hay suficiente stock de {$ing->nombre}");
+            }
+        }
+        foreach ($plato->ingredientes as $ing) {
+            $necesario = $ing->pivot->cantidad * $request->porciones;
+            $ing->stock -= $necesario;
+            $ing->save();
+        }
+    }
+
+    // Descontar stock de bebida (si aplicable)
+    if ($request->bebida_id) {
+        $bebida = Bebida::findOrFail($request->bebida_id);
+        // Asumimos que Bebida tiene una columna `stock`
+        if ($bebida->stock < $request->bebida_cantidad) {
+            return back()->with('error', "No hay suficiente stock de {$bebida->nombre}");
+        }
+        $bebida->stock -= $request->bebida_cantidad;
+        $bebida->save();
+    }
+
+    return back()->with('success', 'Consumo registrado correctamente.');
+}
 
 }

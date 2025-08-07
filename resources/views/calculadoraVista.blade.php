@@ -54,6 +54,7 @@
 
                     <a href="/comidas/disponibles" class="btn btn-outline-success">Ver comidas disponibles</a>
                     <a href="/comidas/disponibles_con_stock" class="btn btn-outline-primary">Comidas con stock</a>
+                    <a href="/consumir" class="btn btn-outline-success">Consumir Platos</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Guardar comida</button>
@@ -92,7 +93,11 @@
     }
 
     function eliminarIngrediente(btn) {
-        btn.closest('.ingrediente-row').remove();
+        const row = btn.closest('.ingrediente-row');
+        const container = row.parentNode;
+        if (container.childElementCount > 1) {
+            container.removeChild(row);
+        }
     }
 </script>
 @endsection
