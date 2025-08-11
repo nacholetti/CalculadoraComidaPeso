@@ -36,3 +36,11 @@ Route::post('/consumir', [GananciaController::class, 'consumirPlato']);
 Route::get('/pedidos',      [GananciaController::class, 'formularioPedidos']);
 Route::post('/pedidos',     [GananciaController::class, 'guardarPedido']);
 Route::delete('/pedidos/{id}', [GananciaController::class, 'cancelarPedido']);
+
+
+// Valorización de comidas (+30%)
+Route::get('/comidas/valorizar', [GananciaController::class, 'valorizarIndex']);
+Route::post('/comidas/valorizar', [GananciaController::class, 'valorizarAplicar']);
+
+Route::get('/productos/valorizar',  [GananciaController::class, 'valorizarProductosIndex']);
+Route::post('/productos/valorizar', [GananciaController::class, 'valorizarProductosAplicar']);

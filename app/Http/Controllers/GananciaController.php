@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 
 use Illuminate\Http\Request;
-use App\Models\Ingrediente;
+use Illuminate\Support\Facades\DB;
 use App\Models\Comida;
 use App\Models\Bebida;
-use App\Models\Plato;
+use App\Models\Ingrediente;
+
 class GananciaController
 {
    public function SimuladorGanancias(){
@@ -230,4 +231,109 @@ public function consumirPlato(Request $request)
     return back()->with('success', 'Consumo registrado correctamente.');
 }
 
+
+ 
+
+ 
+// GET /productos/valorizar
+public function valorizarProductosIndex(Request $request)
+{
+    $pct  = (float)$request->input('pct', 30);
+    $modo = $request->input('modo', 'costo'); // 'costo' | 'precio'
+
+    // COMIDAS
+    $comidas = Comida::with('ingredientes')->get();
+    $comidasCalculadas = $comidas->map(function ($c) use ($pct, $modo) {
+        $costo = 0.0;
+        foreach ($c->ingredientes as $ing) {
+            $costo += (float)($ing->costo_unitario ?? 0) * (float)($ing->pivot->cantidad ?? 0);
+        }
+        $precioActual = (float)($c->precio_venta_kg ?? 0);
+
+        $sugerido = $modo === 'precio'
+            ? round($precioActual * (1 + $pct/100), 2)   // aplicar sobre precio actual
+            : round($costo * (1 + $pct/100), 2);         // aplicar sobre costo
+
+        $c->calc = [
+            'costo'         => round($costo, 2),
+            'precio_actual' => round($precioActual, 2),
+            'sugerido'      => $sugerido,
+            'ganancia'      => round($sugerido - $costo, 2),
+            'delta'         => round($sugerido - $precioActual, 2),
+        ];
+        return $c;
+    });
+
+    // BEBIDAS
+    $bebidas = Bebida::all();
+    $bebidasCalculadas = $bebidas->map(function ($b) use ($pct) {
+        $precioActual = (float)($b->precio_venta ?? 0);
+        $sugerido     = round($precioActual * (1 + $pct/100), 2);
+        $b->calc = [
+            'costo'         => isset($b->costo_unitario) ? round((float)$b->costo_unitario, 2) : null,
+            'precio_actual' => round($precioActual, 2),
+            'sugerido'      => $sugerido,
+            'ganancia'      => isset($b->costo_unitario) ? round($sugerido - (float)$b->costo_unitario, 2) : null,
+            'delta'         => round($sugerido - $precioActual, 2),
+        ];
+        return $b;
+    });
+
+    return view('valorizar_productos', compact('pct','modo','comidasCalculadas','bebidasCalculadas'));
 }
+
+// POST /productos/valorizar
+public function valorizarProductosAplicar(Request $request)
+{
+    $request->validate([
+        'pct' => 'required|numeric|min:0',
+        'modo' => 'in:costo,precio',
+        'seleccion_comidas' => 'array',
+        'seleccion_bebidas' => 'array',
+    ]);
+
+    $pct  = (float)$request->input('pct', 30);
+    $modo = $request->input('modo', 'costo');
+    $idsC = $request->input('seleccion_comidas', []);
+    $idsB = $request->input('seleccion_bebidas', []);
+
+    \DB::transaction(function () use ($pct, $modo, $idsC, $idsB) {
+        // COMIDAS
+        if (!empty($idsC)) {
+            $comidas = Comida::with('ingredientes')->whereIn('id', $idsC)->get();
+            foreach ($comidas as $c) {
+                $actual = (float)($c->precio_venta_kg ?? 0);
+                if ($modo === 'precio') {
+                    $nuevo = round($actual * (1 + $pct/100), 2);
+                } else {
+                    $costo = 0.0;
+                    foreach ($c->ingredientes as $ing) {
+                        $costo += (float)($ing->costo_unitario ?? 0) * (float)($ing->pivot->cantidad ?? 0);
+                    }
+                    $nuevo = round($costo * (1 + $pct/100), 2);
+                }
+                if ($nuevo != $actual) {
+                    $c->precio_venta_kg = $nuevo;
+                    $c->save();
+                }
+            }
+        }
+
+        // BEBIDAS
+        if (!empty($idsB)) {
+            $bebidas = Bebida::whereIn('id', $idsB)->get();
+            foreach ($bebidas as $b) {
+                $b->precio_venta = round(((float)$b->precio_venta) * (1 + $pct/100), 2);
+                $b->save();
+            }
+        }
+    });
+
+    return back()->with('success', "Precios procesados con el {$pct}%.");
+}
+
+
+
+}
+
+
