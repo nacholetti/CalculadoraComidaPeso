@@ -55,6 +55,7 @@
                     <a href="/comidas/disponibles" class="btn btn-outline-success">Ver comidas disponibles</a>
                     <a href="/comidas/disponibles_con_stock" class="btn btn-outline-primary">Comidas con stock</a>
                     <a href="/consumir" class="btn btn-outline-success">Consumir Platos</a>
+                    <a href="{{ url('/productos/valorizar') }}" class="btn btn-warning">Valorizar productos</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Guardar comida</button>

@@ -251,8 +251,8 @@ public function valorizarProductosIndex(Request $request)
         $precioActual = (float)($c->precio_venta_kg ?? 0);
 
         $sugerido = $modo === 'precio'
-            ? round($precioActual * (1 + $pct/100), 2)   // aplicar sobre precio actual
-            : round($costo * (1 + $pct/100), 2);         // aplicar sobre costo
+            ? round($precioActual * (1 + $pct/100), 2)
+            : round($costo * (1 + $pct/100), 2);
 
         $c->calc = [
             'costo'         => round($costo, 2),
@@ -279,25 +279,41 @@ public function valorizarProductosIndex(Request $request)
         return $b;
     });
 
-    return view('valorizar_productos', compact('pct','modo','comidasCalculadas','bebidasCalculadas'));
+    // IMPORTANTE: pasar el resumen (puede ser null)
+    $r = session('resumen');
+
+    return view('valorizar_productos', compact('pct','modo','comidasCalculadas','bebidasCalculadas','r'));
 }
 
-// POST /productos/valorizar
 public function valorizarProductosAplicar(Request $request)
 {
     $request->validate([
         'pct' => 'required|numeric|min:0',
         'modo' => 'in:costo,precio',
-        'seleccion_comidas' => 'array',
-        'seleccion_bebidas' => 'array',
+        'seleccion_comidas' => 'nullable',
+        'seleccion_bebidas' => 'nullable',
     ]);
 
     $pct  = (float)$request->input('pct', 30);
     $modo = $request->input('modo', 'costo');
-    $idsC = $request->input('seleccion_comidas', []);
-    $idsB = $request->input('seleccion_bebidas', []);
 
-    \DB::transaction(function () use ($pct, $modo, $idsC, $idsB) {
+    // Normalizar SIEMPRE a array de enteros
+    $idsC = (array) $request->input('seleccion_comidas', []);
+    $idsB = (array) $request->input('seleccion_bebidas', []);
+
+    // Si los checkboxes no tenían value=id, pueden venir "on". Limpio todo lo no numérico.
+    $idsC = array_values(array_filter(array_map('intval', $idsC), fn($v) => $v > 0));
+    $idsB = array_values(array_filter(array_map('intval', $idsB), fn($v) => $v > 0));
+
+    // (Opcional) Si querés exigir selección:
+    // if (empty($idsC) && empty($idsB)) {
+    //     return back()->with('error', 'No seleccionaste ningún producto.');
+    // }
+
+    $actC = []; $omitC = [];
+    $actB = []; $omitB = [];
+
+    DB::transaction(function () use ($pct, $modo, $idsC, $idsB, &$actC, &$omitC, &$actB, &$omitB) {
         // COMIDAS
         if (!empty($idsC)) {
             $comidas = Comida::with('ingredientes')->whereIn('id', $idsC)->get();
@@ -312,9 +328,13 @@ public function valorizarProductosAplicar(Request $request)
                     }
                     $nuevo = round($costo * (1 + $pct/100), 2);
                 }
-                if ($nuevo != $actual) {
+
+                if ($nuevo == $actual) {
+                    $omitC[] = ['id'=>$c->id,'nombre'=>$c->nombre,'motivo'=>'Sin cambio'];
+                } else {
                     $c->precio_venta_kg = $nuevo;
                     $c->save();
+                    $actC[] = ['id'=>$c->id,'nombre'=>$c->nombre,'de'=>$actual,'a'=>$nuevo];
                 }
             }
         }
@@ -323,15 +343,38 @@ public function valorizarProductosAplicar(Request $request)
         if (!empty($idsB)) {
             $bebidas = Bebida::whereIn('id', $idsB)->get();
             foreach ($bebidas as $b) {
-                $b->precio_venta = round(((float)$b->precio_venta) * (1 + $pct/100), 2);
-                $b->save();
+                $actual = (float)($b->precio_venta ?? 0);
+                $nuevo  = round($actual * (1 + $pct/100), 2);
+
+                if ($nuevo == $actual) {
+                    $omitB[] = ['id'=>$b->id,'nombre'=>$b->nombre,'motivo'=>'Sin cambio'];
+                } else {
+                    $b->precio_venta = $nuevo;
+                    $b->save();
+                    $actB[] = ['id'=>$b->id,'nombre'=>$b->nombre,'de'=>$actual,'a'=>$nuevo];
+                }
             }
         }
     });
 
-    return back()->with('success', "Precios procesados con el {$pct}%.");
-}
+    $resumen = [
+        'pct'  => $pct,
+        'modo' => $modo,
+        'comidas' => [
+            'actualizados' => $actC,
+            'omitidos'     => $omitC,
+        ],
+        'bebidas' => [
+            'actualizados' => $actB,
+            'omitidos'     => $omitB,
+        ],
+        'total_actualizados' => count($actC) + count($actB),
+    ];
 
+    return redirect('/productos/valorizar')
+        ->with('success', "Precios procesados con el {$pct}%.")
+        ->with('resumen', $resumen);
+}
 
 
 }
