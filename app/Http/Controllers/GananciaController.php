@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Comida;
 use App\Models\Bebida;
 use App\Models\Ingrediente;
+use Illuminate\Validation\Rule;
 
 class GananciaController
 {
@@ -374,6 +375,120 @@ public function valorizarProductosAplicar(Request $request)
     return redirect('/productos/valorizar')
         ->with('success', "Precios procesados con el {$pct}%.")
         ->with('resumen', $resumen);
+}
+
+
+
+public function vistaCliente()
+{
+    $comidas = Comida::with('ingredientes')->get()->map(function ($c) {
+        $costo = 0.0;
+        foreach ($c->ingredientes as $ing) {
+            $costo += (float)($ing->costo_unitario ?? 0) * (float)($ing->pivot->cantidad ?? 0);
+        }
+        $precio = (float)($c->precio_venta_kg ?? 0);
+        $c->calc = [
+            'costo'   => round($costo, 2),
+            'precio'  => round($precio, 2),
+            'ganancia'=> round($precio - $costo, 2),
+        ];
+        // 👉 Preconstruyo el JSON para el botón
+        $c->itemJson = json_encode([
+            'id'     => "comida-{$c->id}",
+            'tipo'   => 'comida',
+            'nombre' => $c->nombre,
+            'precio' => $c->calc['precio'],
+            'costo'  => $c->calc['costo'],
+        ], JSON_UNESCAPED_UNICODE);
+        return $c;
+    });
+
+    $bebidas = Bebida::all()->map(function ($b) {
+        $precio = (float)($b->precio_venta ?? 0);
+        $costo  = isset($b->costo_unitario) ? (float)$b->costo_unitario : 0.0;
+        $gan    = $precio - $costo;
+        $b->calc = [
+            'costo'   => round($costo, 2),
+            'precio'  => round($precio, 2),
+            'ganancia'=> round($gan, 2),
+        ];
+        // 👉 Preconstruyo el JSON para el botón
+        $b->itemJson = json_encode([
+            'id'     => "bebida-{$b->id}",
+            'tipo'   => 'bebida',
+            'nombre' => $b->nombre,
+            'precio' => $b->calc['precio'],
+            'costo'  => $b->calc['costo'],
+        ], JSON_UNESCAPED_UNICODE);
+        return $b;
+    });
+
+    $gananciaTotalCatalogo =
+        $comidas->sum(fn($c) => $c->calc['ganancia']) +
+        $bebidas->sum(fn($b) => $b->calc['ganancia']);
+
+    return view('tienda_cliente', compact('comidas','bebidas','gananciaTotalCatalogo'));
+}
+
+
+// POST /checkout  (Devuelve JSON con totales; no persiste todavía)
+public function checkoutStore(Request $request)
+{
+    $data = $request->validate([
+        'items' => ['required','array','min:1'],
+        'items.*.tipo' => ['required', Rule::in(['comida','bebida'])],
+        'items.*.producto_id' => ['required','integer','min:1'],
+        'items.*.qty' => ['required','integer','min:1'],
+    ]);
+
+    $items = $data['items'];
+
+    $total = 0.0;
+    $gan   = 0.0;
+
+    foreach ($items as $it) {
+        if ($it['tipo'] === 'comida') {
+            $c = Comida::with('ingredientes')->findOrFail($it['producto_id']);
+
+            // costo por receta (1 kg)
+            $costo = 0.0;
+            foreach ($c->ingredientes as $ing) {
+                $costo += (float)($ing->costo_unitario ?? 0) * (float)($ing->pivot->cantidad ?? 0);
+            }
+            $precio = (float)($c->precio_venta_kg ?? 0);
+
+        } else { // bebida
+            $b      = Bebida::findOrFail($it['producto_id']);
+            $precio = (float)($b->precio_venta ?? 0);
+            $costo  = (float)($b->costo_unitario ?? 0);
+        }
+
+        $qty   = (int)$it['qty'];
+        $total += $precio * $qty;
+        $gan   += ($precio - $costo) * $qty;
+    }
+
+    return response()->json([
+        'ok'             => true,
+        'order_id'       => 0,                    // por ahora sin persistencia
+        'total'          => round($total, 2),
+        'total_ganancia' => round($gan, 2),
+    ]);
+}
+
+
+
+public function checkout(Request $request)
+{
+    $items = $request->input('items', []);
+
+    // Acá procesarías la venta, registrarías en DB, etc.
+    // Por ejemplo:
+    foreach ($items as $item) {
+        // Guardar o descontar stock según tipo
+    }
+
+    return response()->json(['message' => 'Compra realizada con éxito']);
 }
 
 

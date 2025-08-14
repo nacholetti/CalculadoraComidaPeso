@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GananciaController;
 
 
+
 Route::post('/comidas/store', [GananciaController::class, 'guardadoAlimentos']);
 
 Route::get('/ingredientes/create', [GananciaController::class, 'formularioIngredientes']);
@@ -44,3 +45,11 @@ Route::post('/comidas/valorizar', [GananciaController::class, 'valorizarAplicar'
 
 Route::get('/productos/valorizar',  [GananciaController::class, 'valorizarProductosIndex']);
 Route::post('/productos/valorizar', [GananciaController::class, 'valorizarProductosAplicar']);
+
+
+// routes/web.php
+Route::get('/tienda', [GananciaController::class, 'vistaCliente'])->name('tienda.cliente');
+Route::post('/checkout', [GananciaController::class, 'checkoutStore'])
+    ->name('checkout.store');
+
+    Route::post('/checkout', [GananciaController::class, 'checkout'])->name('checkout.store');
