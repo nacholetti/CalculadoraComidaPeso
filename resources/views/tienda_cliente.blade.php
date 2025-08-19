@@ -148,8 +148,11 @@
 </style>
 
 <script>
-  window.checkoutUrl = "{{ route('checkout.store') }}"; // o "{{ url('/checkout') }}"
-  window.csrfToken   = "{{ csrf_token() }}";
+  window.checkoutUrl        = "{{ route('checkout.store') }}";     // POST
+  window.checkoutResumenUrl = "{{ route('checkout.resumen') }}";   // GET → genera /checkout/resumen
+  window.csrfToken          = "{{ csrf_token() }}";
 </script>
 <script src="{{ asset('js/tienda.js') }}" defer></script>
+
+
 @endsection

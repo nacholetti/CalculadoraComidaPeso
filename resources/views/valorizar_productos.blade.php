@@ -128,7 +128,7 @@
                                 <th>Precio Actual/kg</th>
                                 <th>Precio Sugerido ({{ $pct }}%)</th>
                                 <th>Ganancia (vs costo)</th>
-                                <th>Δ vs actual</th>
+                                <th>diff Actual y Sugerido</th>
                             </tr>
                         </thead>
                         <tbody>

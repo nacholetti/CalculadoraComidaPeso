@@ -34,7 +34,14 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/comidas/disponibles_con_stock">✅ Con stock</a>
+                        
                     </li>
+
+                         <li class="nav-item">
+                        <a href="{{ route('tienda.cliente') }}" class="nav-link">➕Ir a la tienda</a>
+                        
+                    </li>
+
                     </li>    
                         <a class="nav-link" href='/bebidas'>➕Agregar Bebida</a>
                         <a class="nav-link" href='/bebidas/stock'>📦Ver Stock de Bebidas</a>

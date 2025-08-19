@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-
+use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Comida;
 use App\Models\Bebida;
 use App\Models\Ingrediente;
-use Illuminate\Validation\Rule;
+
+
 
 class GananciaController
 {
@@ -239,7 +241,7 @@ public function consumirPlato(Request $request)
 // GET /productos/valorizar
 public function valorizarProductosIndex(Request $request)
 {
-    $pct  = (float)$request->input('pct', 30);
+    $pct  = (float)$request->input('pct',  30);
     $modo = $request->input('modo', 'costo'); // 'costo' | 'precio'
 
     // COMIDAS
@@ -275,7 +277,7 @@ public function valorizarProductosIndex(Request $request)
             'precio_actual' => round($precioActual, 2),
             'sugerido'      => $sugerido,
             'ganancia'      => isset($b->costo_unitario) ? round($sugerido - (float)$b->costo_unitario, 2) : null,
-            'delta'         => round($sugerido - $precioActual, 2),
+            'delta'         => round(  $precioActual - $sugerido, 2),
         ];
         return $b;
     });
@@ -443,39 +445,71 @@ public function checkoutStore(Request $request)
 
     $items = $data['items'];
 
+    $lineas = [];
     $total = 0.0;
-    $gan   = 0.0;
+    $totalCosto = 0.0;
+    $totalGan = 0.0;
 
     foreach ($items as $it) {
         if ($it['tipo'] === 'comida') {
-            $c = Comida::with('ingredientes')->findOrFail($it['producto_id']);
+            $c = \App\Models\Comida::with('ingredientes')->findOrFail($it['producto_id']);
 
             // costo por receta (1 kg)
             $costo = 0.0;
             foreach ($c->ingredientes as $ing) {
                 $costo += (float)($ing->costo_unitario ?? 0) * (float)($ing->pivot->cantidad ?? 0);
             }
-            $precio = (float)($c->precio_venta_kg ?? 0);
+            $precio   = (float)($c->precio_venta_kg ?? 0);
+            $nombre   = $c->nombre;
+            $pid      = $c->id;
 
         } else { // bebida
-            $b      = Bebida::findOrFail($it['producto_id']);
-            $precio = (float)($b->precio_venta ?? 0);
-            $costo  = (float)($b->costo_unitario ?? 0);
+            $b       = \App\Models\Bebida::findOrFail($it['producto_id']);
+            $precio  = (float)($b->precio_venta ?? 0);
+            $costo   = (float)($b->costo_unitario ?? 0);
+            $nombre  = $b->nombre;
+            $pid     = $b->id;
         }
 
-        $qty   = (int)$it['qty'];
-        $total += $precio * $qty;
-        $gan   += ($precio - $costo) * $qty;
+        $cantidad = (int)$it['qty'];
+        $subtotal = round($precio * $cantidad, 2);
+        $ganancia = round(($precio - $costo) * $cantidad, 2);
+
+        $lineas[] = [
+            'tipo'            => $it['tipo'],
+            'producto_id'     => $pid,
+            'nombre'          => $nombre,
+            'cantidad'        => $cantidad,
+            'precio_unitario' => round($precio, 2),
+            'costo_unitario'  => round($costo, 2),
+            'subtotal'        => $subtotal,
+            'ganancia'        => $ganancia,
+        ];
+
+        $total      += $subtotal;
+        $totalCosto += $costo * $cantidad;
+        $totalGan   += $ganancia;
     }
+
+    $orderId = (int) now()->format('YmdHis');
+
+    // Guardar en sesión EXACTAMENTE lo que la vista espera
+    Session::put('last_order', [
+        'order_id'       => $orderId,
+        'items'          => $lineas,                 // 👈 acá van las lineas enriquecidas
+        'total'          => round($total, 2),
+        'total_ganancia' => round($totalGan, 2),
+        'total_costo'    => round($totalCosto, 2),
+    ]);
+    Session::save(); // fuerza escritura de sesión antes de redirigir desde el front
 
     return response()->json([
         'ok'             => true,
-        'order_id'       => 0,                    // por ahora sin persistencia
+        'order_id'       => $orderId,
         'total'          => round($total, 2),
-        'total_ganancia' => round($gan, 2),
+        'total_ganancia' => round($totalGan, 2),
     ]);
 }
-
 
 
 public function checkout(Request $request)
@@ -489,6 +523,18 @@ public function checkout(Request $request)
     }
 
     return response()->json(['message' => 'Compra realizada con éxito']);
+}
+
+
+public function checkoutResumen()
+{
+    $last = Session::get('last_order');
+    if (!$last) {
+        return redirect('/tienda'); // no hay orden
+    }
+    return view('checkout_resumen', [
+        'order' => $last
+    ]);
 }
 
 

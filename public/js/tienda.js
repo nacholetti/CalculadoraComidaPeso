@@ -91,7 +91,7 @@ if (!window.__tiendaInit) {
     totEl.textContent = total.toFixed(2);
     ganEl.textContent = ganancia.toFixed(2);
 
-    // console.log("[carrito] render ok", {items, total, ganancia});
+    console.log("[carrito] render ok", {items, total, ganancia});
   }
 
   // ===== Mutadores (render primero, luego persistir) =====
@@ -115,36 +115,69 @@ if (!window.__tiendaInit) {
     guardarCarrito();
   }
 
-  // ===== Finalizar compra =====
   async function finalizarCompra() {
-    if (carrito.size === 0) return;
-    const items = Array.from(carrito.values()).map(it => ({
-      tipo: it.tipo,
-      producto_id: it.producto_id,
-      qty: it.qty
-    }));
-    try {
-      const res = await fetch(checkoutUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken,
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ items })
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Error en checkout");
-      }
-      const data = await res.json();
-      carrito.clear(); guardarCarrito(); renderCarrito();
-      alert(`Orden #${data.order_id} creada. Total: $${Number(data.total).toFixed(2)}`);
-    } catch (e) {
-      console.error(e);
-      alert("No se pudo finalizar la compra.");
-    }
+  if (carrito.size === 0) return;
+
+  // payload para backend (no mandamos precios/costos desde cliente)
+  const items = Array.from(carrito.values()).map(it => ({
+    tipo: it.tipo,
+    producto_id: it.producto_id,
+    qty: it.qty
+  }));
+
+  // texto para WhatsApp
+  let total = 0;
+  let texto = "🧾 *Resumen de compra*\n";
+  for (const it of carrito.values()) {
+    const sub = Number(it.precio) * Number(it.qty);
+    total += sub;
+    texto += `• ${it.qty}× ${it.nombre} — $${sub.toFixed(2)}\n`;
   }
+  texto += `\n💵 *Total:* $${total.toFixed(2)}`;
+
+  // tu número (formato internacional sin espacios/guiones)
+  const numeroWpp = "5491140555277"; // <--- CAMBIÁ ESTO
+
+  try {
+    const res = await fetch(checkoutUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken,
+        "Accept": "application/json"
+      },
+      // ⚠️ MUY IMPORTANTE: enviar cookies de sesión
+      credentials: "same-origin",
+      body: JSON.stringify({ items })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Error en checkout");
+    }
+    const data = await res.json(); // { ok, order_id, total }
+
+    // abrir WhatsApp en nueva pestaña
+    const wppUrl = `https://wa.me/${numeroWpp}?text=${encodeURIComponent(`${texto}\n\n🧾 Orden #${data.order_id ?? 0}`)}`;
+    window.open(wppUrl, "_blank");
+
+    // limpiar y repintar
+    carrito.clear(); guardarCarrito(); renderCarrito();
+
+    // redirigir a la vista resumen (con pequeño delay por estabilidad)
+    const resumenUrl = (typeof window !== "undefined" && window.checkoutResumenUrl)
+      ? window.checkoutResumenUrl
+      : "/checkout/resumen"; // <- SLASH, no punto
+
+    setTimeout(() => {
+      window.location.href = resumenUrl;
+    }, 200);
+  } catch (e) {
+    console.error(e);
+    alert("No se pudo finalizar la compra.");
+  }
+}
+
 
   // ===== Delegación de eventos (1 sola) =====
   document.addEventListener("DOMContentLoaded", () => {

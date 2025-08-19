@@ -49,7 +49,9 @@ Route::post('/productos/valorizar', [GananciaController::class, 'valorizarProduc
 
 // routes/web.php
 Route::get('/tienda', [GananciaController::class, 'vistaCliente'])->name('tienda.cliente');
+
 Route::post('/checkout', [GananciaController::class, 'checkoutStore'])
     ->name('checkout.store');
 
-    Route::post('/checkout', [GananciaController::class, 'checkout'])->name('checkout.store');
+Route::get('/checkout/resumen', [GananciaController::class, 'checkoutResumen'])
+    ->name('checkout.resumen');
