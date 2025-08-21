@@ -12,7 +12,7 @@ use App\Models\Ingrediente;
 
 
 
-class GananciaController
+class GananciaController extends Controller
 {
    public function SimuladorGanancias(){
 
@@ -111,7 +111,7 @@ public function disponibles()
 
 public function formularioComidas() {
     $ingredientes = Ingrediente::all();
-    return view('comidas.create', compact('ingredientes'));
+    return view('calculadoraVista', compact('ingredientes'));
 }
 public function calcularDisponibilidad()
 {
@@ -452,7 +452,7 @@ public function checkoutStore(Request $request)
 
     foreach ($items as $it) {
         if ($it['tipo'] === 'comida') {
-            $c = \App\Models\Comida::with('ingredientes')->findOrFail($it['producto_id']);
+            $c = Comida::with('ingredientes')->findOrFail($it['producto_id']);
 
             // costo por receta (1 kg)
             $costo = 0.0;
@@ -464,7 +464,7 @@ public function checkoutStore(Request $request)
             $pid      = $c->id;
 
         } else { // bebida
-            $b       = \App\Models\Bebida::findOrFail($it['producto_id']);
+            $b       = Bebida::findOrFail($it['producto_id']);
             $precio  = (float)($b->precio_venta ?? 0);
             $costo   = (float)($b->costo_unitario ?? 0);
             $nombre  = $b->nombre;
@@ -512,20 +512,6 @@ public function checkoutStore(Request $request)
 }
 
 
-public function checkout(Request $request)
-{
-    $items = $request->input('items', []);
-
-    // Acá procesarías la venta, registrarías en DB, etc.
-    // Por ejemplo:
-    foreach ($items as $item) {
-        // Guardar o descontar stock según tipo
-    }
-
-    return response()->json(['message' => 'Compra realizada con éxito']);
-}
-
-
 public function checkoutResumen()
 {
     $last = Session::get('last_order');
@@ -536,6 +522,21 @@ public function checkoutResumen()
         'order' => $last
     ]);
 }
+
+
+
+public function tiendaCliente() { return $this->vistaCliente(); }
+public function stockIngredientes() { return $this->mostrarStock(); }
+public function createIngrediente() { return $this->formularioIngredientes(); }
+public function storeIngrediente(Request $r) { return $this->guardarIngrediente($r); }
+public function comidasDisponibles() { return $this->disponibles(); }
+public function createComida() { return $this->formularioComidas(); }
+public function storeComida(Request $r) { return $this->guardadoAlimentos($r); }
+public function indexBebidas() { return $this->listarBebidas(); }
+public function stockBebidas() { return $this->verStock(); }
+public function valorizarProductos(Request $r) { return $this->valorizarProductosIndex($r); }
+public function checkout(Request $r) { return $this->checkoutStore($r); }
+
 
 
 }

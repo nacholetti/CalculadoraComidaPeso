@@ -84,7 +84,7 @@
         @endforelse
       </div>
     </div>
-
+  
     {{-- Panel lateral: Totales y carrito --}}
     <div class="col-lg-4">
       <div class="card shadow-sm mb-3">
@@ -126,6 +126,8 @@
 
     </div>
   </div>
+              <a href="{{ url('/') }}" class="btn btn-secondary">Volver</a>
+
 </div>
 
 <style>
@@ -145,11 +147,13 @@
     width: 28px; height: 28px; line-height: 1;
     padding: 0; text-align: center;
   }
+
+
 </style>
 
 <script>
-  window.checkoutUrl        = "{{ route('checkout.store') }}";     // POST
-  window.checkoutResumenUrl = "{{ route('checkout.resumen') }}";   // GET → genera /checkout/resumen
+  window.checkoutUrl        = "{{ route('tienda.checkout') }}";     // POST
+  window.checkoutResumenUrl = "{{ route('tienda.checkout.resumen') }}";   // GET → genera /checkout/resumen
   window.csrfToken          = "{{ csrf_token() }}";
 </script>
 <script src="{{ asset('js/tienda.js') }}" defer></script>

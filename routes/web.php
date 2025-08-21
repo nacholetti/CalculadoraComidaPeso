@@ -1,57 +1,54 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GananciaController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\GananciaController; // <- tu controlador principal
 
+// ---------- INICIO / HOME ----------
+Route::get('/', function () {
+    return view('welcome');
+})->name('home');
 
+// ---------- ZONA PÚBLICA (Clientes) ----------
+Route::get('/tienda', [GananciaController::class, 'tiendaCliente'])->name('tienda.index');
+Route::post('/checkout', [GananciaController::class, 'checkout'])->name('tienda.checkout');
+Route::get('/checkout/resumen', [GananciaController::class, 'checkoutResumen'])->name('tienda.checkout.resumen');
 
-Route::post('/comidas/store', [GananciaController::class, 'guardadoAlimentos']);
+// ---------- DASHBOARD (para usuarios logueados con Breeze) ----------
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/ingredientes/create', [GananciaController::class, 'formularioIngredientes']);
-Route::post('/ingredientes/store', [GananciaController::class, 'guardarIngrediente']);
-Route::get('/', [GananciaController::class, 'SimuladorGanancias']);
-Route::get('/stock', [GananciaController::class, 'mostrarStock']);
-// web.php
-Route::post('/stock/update', [GananciaController::class, 'actualizarStock']);
+// ---------- ZONA PROTEGIDA (solo usuarios logueados) ----------
+Route::middleware('auth')->group(function () {
 
-Route::get('/comidas/disponibles', [GananciaController::class, 'disponibles']);
+    // ---- INGREDIENTES ----
+    Route::get('/ingredientes/stock', [GananciaController::class, 'stockIngredientes'])->name('ingredientes.stock');
+    Route::post('/ingredientes/stock', [GananciaController::class, 'actualizarStockIngredientes'])->name('ingredientes.stock.update');
+    Route::get('/ingredientes/create', [GananciaController::class, 'createIngrediente'])->name('ingredientes.create');
+    Route::post('/ingredientes', [GananciaController::class, 'storeIngrediente'])->name('ingredientes.store');
 
-Route::get('/comidas/create', [GananciaController::class, 'formularioComidas']);
-Route::post('/comidas/store', [GananciaController::class, 'guardadoAlimentos'])->name('comidas.store');
-Route::get('/comidas/disponibles_con_stock', [GananciaController::class, 'calcularDisponibilidad']);
+    // ---- COMIDAS ----
+    Route::get('/comidas/disponibles', [GananciaController::class, 'calcularDisponibilidad'])->name('comidas.disponibles');
+    Route::get('/comidas/create', [GananciaController::class, 'createComida'])->name('comidas.create');
+    Route::post('/comidas', [GananciaController::class, 'storeComida'])->name('comidas.store');
 
-Route::get('/bebidas/create', [GananciaController::class, 'formularioBebida']);
-Route::post('/bebidas/store', [GananciaController::class, 'guardarBebida']);
-Route::get('/bebidas', [GananciaController::class, 'listarBebidas']);
+    // ---- BEBIDAS ----
+    Route::get('/bebidas', [GananciaController::class, 'indexBebidas'])->name('bebidas.index');
+    Route::get('/bebidas/stock', [GananciaController::class, 'stockBebidas'])->name('bebidas.stock');
+    Route::post('/bebidas/stock', [GananciaController::class, 'actualizarStockBebidas'])->name('bebidas.stock.update');
+    Route::get('/bebidas/create', [GananciaController::class, 'createBebida'])->name('bebidas.create');
+    Route::post('/bebidas', [GananciaController::class, 'storeBebida'])->name('bebidas.store');
 
+    // ---- VALORIZACIÓN ----
+    Route::get('/productos/valorizar', [GananciaController::class, 'valorizarProductos'])->name('productos.valorizar');
+    Route::post('/productos/valorizar', [GananciaController::class, 'valorizarProductosAplicar'])->name('productos.valorizar.aplicar');
 
-Route::get('/bebidas/stock', [GananciaController::class, 'verStock'])->name('bebidas.stock');
+    // ---- PERFIL (Breeze) ----
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-// Mostrar formulario para consumir platos
-Route::get('/consumir', [GananciaController::class, 'formularioConsumo']);
-
-// Procesar la acción de consumir
-Route::post('/consumir', [GananciaController::class, 'consumirPlato']);
-
-
-Route::get('/pedidos',      [GananciaController::class, 'formularioPedidos']);
-Route::post('/pedidos',     [GananciaController::class, 'guardarPedido']);
-Route::delete('/pedidos/{id}', [GananciaController::class, 'cancelarPedido']);
-
-
-// Valorización de comidas (+30%)
-Route::get('/comidas/valorizar', [GananciaController::class, 'valorizarIndex']);
-Route::post('/comidas/valorizar', [GananciaController::class, 'valorizarAplicar']);
-
-Route::get('/productos/valorizar',  [GananciaController::class, 'valorizarProductosIndex']);
-Route::post('/productos/valorizar', [GananciaController::class, 'valorizarProductosAplicar']);
-
-
-// routes/web.php
-Route::get('/tienda', [GananciaController::class, 'vistaCliente'])->name('tienda.cliente');
-
-Route::post('/checkout', [GananciaController::class, 'checkoutStore'])
-    ->name('checkout.store');
-
-Route::get('/checkout/resumen', [GananciaController::class, 'checkoutResumen'])
-    ->name('checkout.resumen');
+// rutas de Breeze (login, registro, etc.)
+require __DIR__.'/auth.php';

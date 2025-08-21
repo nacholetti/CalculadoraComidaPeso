@@ -6,22 +6,41 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('bebidas', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('bebidas')) {
+            Schema::create('bebidas', function (Blueprint $table) {
+                $table->id();
+                $table->string('nombre', 120)->unique();
+                $table->decimal('precio_venta', 10, 2)->default(0);
+                $table->decimal('volumen_litros', 8, 3)->default(0);
+                $table->decimal('stock', 10, 3)->default(0);
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('bebidas', function (Blueprint $table) {
+                if (!Schema::hasColumn('bebidas', 'nombre')) {
+                    $table->string('nombre', 120)->unique()->after('id');
+                }
+                if (!Schema::hasColumn('bebidas', 'precio_venta')) {
+                    $table->decimal('precio_venta', 10, 2)->default(0)->after('nombre');
+                }
+                if (!Schema::hasColumn('bebidas', 'volumen_litros')) {
+                    $table->decimal('volumen_litros', 8, 3)->default(0)->after('precio_venta');
+                }
+                if (!Schema::hasColumn('bebidas', 'stock')) {
+                    $table->decimal('stock', 10, 3)->default(0)->after('volumen_litros');
+                }
+                if (!Schema::hasColumn('bebidas', 'created_at')) {
+                    $table->timestamps();
+                }
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('bebidas');
+        // si querés poder revertir totalmente:
+        // Schema::dropIfExists('bebidas');
     }
 };

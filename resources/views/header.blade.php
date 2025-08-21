@@ -27,18 +27,18 @@
                         <a class="nav-link" href="/ingredientes/create">🧂 Crear ingrediente</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/stock">📦 Ver stock</a>
+                        <a class="nav-link" href="/ingredientes/stock">📦 Ver stock</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/comidas/disponibles">📋 Comidas disponibles</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/comidas/disponibles_con_stock">✅ Con stock</a>
+                        <a class="nav-link" href="/comidas/disponibles">✅ Con stock</a>
                         
                     </li>
 
                          <li class="nav-item">
-                        <a href="{{ route('tienda.cliente') }}" class="nav-link">➕Ir a la tienda</a>
+                        <a href="{{ route('tienda.index') }}" class="nav-link">➕Ir a la tienda</a>
                         
                     </li>
 
